@@ -1,5 +1,5 @@
 [server]
-port=8080
+port=6020
 
 [mysql]
 enable = false
@@ -13,6 +13,18 @@ maxOpenConns=50
 [mongodb]
 enable = false
 url="mongodb://localhost:27017"
+
+[redis]
+enable = true
+address = "localhost:6379"
+password = ""
+DB = 0
+poolSize = 5
+
+[business]
+ttl = 1200
+hash_min_len = 4
+push_limit = 4096
 
 [jwt]
 headerName = "token"
@@ -29,7 +41,7 @@ keyFile = "cert.key"
 [log]
 # available values :"debug" "info" "error" "fatal" "panic"
 level = "debug"
-# logfile = "cross_share_server.log"
+# logfile = "share.log"
 logfile = ""
 showFullTime = true
 reportCaller = false
