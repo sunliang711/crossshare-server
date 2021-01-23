@@ -1,0 +1,4 @@
+.DS_Store
+*.swp
+.idea/
+cross_share_server.log
