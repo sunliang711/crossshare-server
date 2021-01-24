@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,10 @@ import (
 
 func Push(c *gin.Context) {
 	filename := c.Request.Header.Get("Filename")
+	if filename != "" {
+		filename = path.Base(filename)
+	}
+	logrus.Debugf("filename: %v", filename)
 	data, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		msg := fmt.Sprintf("Read request error: %v", err)
