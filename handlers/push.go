@@ -6,7 +6,7 @@ import (
 	"cross_share_server/utils"
 	"encoding/hex"
 	"fmt"
-	"strconv"
+	"io/ioutil"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,52 +14,25 @@ import (
 	"github.com/spf13/viper"
 )
 
-func PushFile(c *gin.Context) {
-}
-func PushText(c *gin.Context) {
-	// Only use Share.Content field
-	var req types.Share
-	if err := c.BindJSON(&req); err != nil {
-		msg := "invalid request format"
+func Push(c *gin.Context) {
+	filename := c.Request.Header.Get("Filename")
+	data, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		msg := fmt.Sprintf("Read request error: %v", err)
+		logrus.Error(msg)
 		c.JSON(200, types.PushResp{Code: 1, Msg: msg})
+		return
+	}
+	logrus.Debugf("file content len: %v", len(data))
+	newKey, hash, err := data2key(data)
+	if err != nil {
+		msg := fmt.Sprintf("%v", err)
 		logrus.Errorf(msg)
-		return
-	}
-	// check req.Content size
-	pushLimit := viper.GetInt("business.push_limit")
-	if len(req.Content) > pushLimit {
-		msg := fmt.Sprintf("request content exceed %d bytes", pushLimit)
-		c.JSON(200, types.PushResp{Code: 2, Msg: msg})
+		c.JSON(200, types.PushResp{Code: 1, Msg: msg})
 		return
 	}
 
-	logrus.Debugf("Request comming: %+v", req)
-	md5Value := utils.Md5([]byte(req.Content))
-	md5Str := hex.EncodeToString(md5Value)
-	logrus.Debugf("Request hash: %v", md5Str)
-
-	//hash prefix collision
-	n := viper.GetInt("business.hash_min_len")
-	newKey := ""
-	for n < len(md5Str) {
-		fields, err := database.Rdb.HMGet(database.Ctx, md5Str[:n], "type").Result()
-		if err != nil {
-			msg := "Internal redis error"
-			c.JSON(200, types.PushResp{Code: 100, Msg: msg})
-			logrus.Errorf(msg)
-			return
-		}
-		// Not collision
-		if fields[0] == nil {
-			newKey = md5Str[:n]
-			break
-		}
-		logrus.Debugf("hash collision: %v", md5Str[:n])
-		n++
-	}
-	logrus.Debugf("Result key: %v", newKey)
-	// md5 -> {type:xx, name: yy, content: zz}
-	if err := database.Rdb.HSet(database.Ctx, newKey, "type", fmt.Sprintf("%d", types.TextType), "name", "", "content", string(req.Content)).Err(); err != nil {
+	if err := database.Rdb.HSet(database.Ctx, newKey, "name", filename, "content", data, "hash", hash).Err(); err != nil {
 		msg := "internal redis error"
 		c.JSON(200, types.PushResp{Code: 100, Msg: msg})
 		logrus.Errorf(msg)
@@ -75,72 +48,31 @@ func PushText(c *gin.Context) {
 
 	// c.JSON(200, types.Resp{Code: 0, Msg: "OK", Data: gin.H{"key": md5Str, "ttl": viper.GetInt64("business.ttl")}})
 	c.JSON(200, types.PushResp{Code: 0, Msg: "OK", Key: newKey, TTL: viper.GetInt64("business.ttl")})
+
 }
 
-func Pull(c *gin.Context) {
-	logrus.Infof("Content type: %v\n", c.ContentType())
-	key := c.Param("key")
-	keys := []string{"type", "name", "content"}
-	fields, err := database.Rdb.HMGet(database.Ctx, key, keys...).Result()
-	if err != nil {
-		msg := "internal redis error"
-		logrus.Errorf(msg)
-		c.JSON(200, types.Share{
-			Code: 1,
-			Msg:  msg,
-			Type: types.InvalidType,
-		})
-		return
-	}
+func data2key(data []byte) (string, string, error) {
+	hashValue := utils.Md5(data)
+	hashStr := hex.EncodeToString(hashValue)
+	logrus.Debugf("Request hash: %v", hashStr)
 
-	empty := true
-	for _, field := range fields {
-		if field != nil {
-			empty = false
+	//hash prefix collision
+	n := viper.GetInt("business.hash_min_len")
+	newKey := ""
+	for n < len(hashStr) {
+		fields, err := database.Rdb.HMGet(database.Ctx, hashStr[:n], "type", "hash").Result()
+		if err != nil {
+			return "", "", fmt.Errorf("Internale redis error")
 		}
-	}
-	if empty {
-		msg := "Not found"
-		logrus.Infof(msg)
-		c.JSON(200, types.Share{
-			Code: 1,
-			Msg:  msg,
-			Type: types.InvalidType,
-		})
-		return
+		// Not exist, not collision OR already exist complete hash
+		if fields[0] == nil || fields[1].(string) == hashStr {
+			newKey = hashStr[:n]
+			break
+		}
+
+		logrus.Debugf("hash collision: %v", hashStr[:n])
+		n++
 	}
 
-	typeString := fields[0].(string)
-	typ, err := strconv.Atoi(typeString)
-	if err != nil {
-		msg := "Internal type not int??"
-		logrus.Errorf(msg)
-		c.JSON(200, types.Share{
-			Code: 1,
-			Msg:  msg,
-			Type: types.InvalidType,
-		})
-	}
-
-	switch types.ShareType(typ) {
-	case types.TextType:
-		content := fields[2].(string)
-		c.JSON(200, types.Share{
-			Code:    types.OK,
-			Msg:     "OK",
-			Type:    types.TextType,
-			Content: content,
-		})
-	case types.FileType:
-		c.JSON(200, types.Resp{
-			Code: types.OK,
-			Msg:  "TODO",
-		})
-	default:
-		c.JSON(200, types.Resp{
-			Code: 1,
-			Msg:  "Cannot reach here",
-		})
-	}
-
+	return newKey, hashStr, nil
 }
