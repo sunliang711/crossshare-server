@@ -23,6 +23,12 @@ func Push(c *gin.Context) {
 		c.JSON(200, types.PushResp{Code: 1, Msg: msg})
 		return
 	}
+	if len(data) > viper.GetInt("business.push_limit") {
+		msg := fmt.Sprintf("Request body size: %v exceeds config size: %v", len(data), viper.GetInt("business.push_limit"))
+		logrus.Errorf(msg)
+		c.JSON(200, types.PushResp{Code: 1, Msg: msg})
+		return
+	}
 	logrus.Debugf("file content len: %v", len(data))
 	newKey, hash, err := data2key(data)
 	if err != nil {
