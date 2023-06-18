@@ -1,5 +1,5 @@
 [server]
-port=6020
+port=3007
 
 [mysql]
 enable = false
@@ -16,7 +16,7 @@ url="mongodb://localhost:27017"
 
 [redis]
 enable = true
-address = "localhost:6379"
+address = "redis:6379"
 password = ""
 DB = 0
 poolSize = 5

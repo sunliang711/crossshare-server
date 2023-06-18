@@ -43,6 +43,7 @@ func Push(c *gin.Context) {
 		return
 	}
 
+	// hash => { name: "" , content: "", hash: ""}
 	if err := database.Rdb.HSet(database.Ctx, newKey, "name", filename, "content", data, "hash", hash).Err(); err != nil {
 		msg := "internal redis error"
 		c.JSON(200, types.PushResp{Code: 100, Msg: msg})
