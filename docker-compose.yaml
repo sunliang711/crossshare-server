@@ -9,6 +9,8 @@ services:
     #   ALIDDNS_LOG_LEVEL: info
     volumes:
       - ./cmd/crossshare_server/config.toml:/usr/local/bin/config.toml
+    networks:
+      - eagle
   
   # sudo sysctl vm.overcommit_memory=1 
   redis:
@@ -17,3 +19,8 @@ services:
     # ports:
     #   - 6378:6379
 
+
+networks:
+  eagle:
+    name: eagle
+    external: true
