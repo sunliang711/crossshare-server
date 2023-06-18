@@ -16,6 +16,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
+    networks:
+      - eagle
     # ports:
     #   - 6378:6379
 
