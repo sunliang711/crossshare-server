@@ -1,7 +1,8 @@
 version: "3.9"
 services:
   crossshare_server:
-    build: .
+    #build: .
+    image: sunliang711/crossshare-server:master
     restart: always
     ports:
       - "3007:3007"
