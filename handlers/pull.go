@@ -54,7 +54,7 @@ func Pull(c *gin.Context) {
 	// response.setHeader('Access-Control-Expose-Headers', 'Crossshare-Filename');
 	// // 或者暴露多个自定义头
 	// response.setHeader('Access-Control-Expose-Headers', 'Crossshare-Filename, Other-Custom-Header');
-	// c.Header("Access-Control-Expose-Headers", "Crossshare-Filename, Crossshare-Type, Key-Deleted")
+	c.Header("Access-Control-Expose-Headers", "Crossshare-Filename, Crossshare-Type, Key-Deleted")
 
 	// hash :=fields[1].(string)
 	if filename == "" {
