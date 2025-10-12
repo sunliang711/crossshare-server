@@ -50,6 +50,12 @@ func Pull(c *gin.Context) {
 	c.Header("Key-Deleted", keyDeleted)
 	filename := fields[0].(string)
 	content := fields[1].(string)
+	// 	// 服务器端需要添加
+	// response.setHeader('Access-Control-Expose-Headers', 'Crossshare-Filename');
+	// // 或者暴露多个自定义头
+	// response.setHeader('Access-Control-Expose-Headers', 'Crossshare-Filename, Other-Custom-Header');
+	c.Header("Access-Control-Expose-Headers", "Crossshare-Filename, Crossshare-Type, Key-Deleted")
+
 	// hash :=fields[1].(string)
 	if filename == "" {
 		logrus.Infof("text type, text: %v", content)

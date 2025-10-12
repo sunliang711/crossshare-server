@@ -1,22 +1,22 @@
 [server]
-port=3007
+port = 3007
 
 [mysql]
 enable = false
 orm = false
 # <user>[:password]@tcp(address)/<Database>[?parseTime=true][&loc=Local]
 # address: host[:port] | /path/to/unix/socket/file
-dsn="<user>[:password]@tcp(localhost)/<Database>[?parseTime=true][&loc=Local]"
-maxIdleConns=0
-maxOpenConns=50
+dsn = "<user>[:password]@tcp(localhost)/<Database>[?parseTime=true][&loc=Local]"
+maxIdleConns = 0
+maxOpenConns = 50
 
 [mongodb]
 enable = false
-url="mongodb://localhost:27017"
+url = "mongodb://localhost:27017"
 
 [redis]
 enable = true
-address = "redis:6379"
+address = "10.1.9.155:6379"
 password = ""
 DB = 0
 poolSize = 5
@@ -29,7 +29,7 @@ push_limit = 40960000
 [jwt]
 headerName = "token"
 # key to sign jwt
-key="<secret key>"
+key = "<secret key>"
 # token 过期时间，单位小时；为零时表示不过期
 exp = 24
 
@@ -48,8 +48,8 @@ reportCaller = false
 
 [cors]
 # "*" means allow all origins
-allowOrigins = [ "*" ]
-allowMethods = [ "GET", "POST" ]
-allowHeaders = [ "Origin", "Content-Length", "Content-Type" ]
+allowOrigins = ["*"]
+allowMethods = ["GET", "POST"]
+allowHeaders = ["Origin", "Content-Length", "Content-Type", "Filename"]
 # unit: second
 maxAge = 43200
