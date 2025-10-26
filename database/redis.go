@@ -16,6 +16,7 @@ var (
 func init() {
 	Ctx = context.Background()
 	if viper.GetBool("redis.enable") {
+		logrus.Infof("Connecting to Redis: %s", viper.GetString("redis.address"))
 		Rdb = redis.NewClient(&redis.Options{
 			Addr:     viper.GetString("redis.address"),
 			Password: viper.GetString("redis.password"),
